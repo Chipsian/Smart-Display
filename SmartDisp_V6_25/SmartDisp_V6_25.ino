@@ -26,6 +26,10 @@
 #include <WiFiUdp.h>
 //#include <string.h>
 
+/* Font*/
+#include "italic5x5_font.h"
+
+
 const char *ssid = "TP-LINK_AAB9";
 const char *password = "08728425";
 
@@ -38,8 +42,6 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "0.at.pool.ntp.org", utcOffsetInSeconds);
 
 
-/* Font*/
-#include "italic5x5_font.h"
 
 
 // Which pin on the Arduino is connected to the NeoPixels?
@@ -322,31 +324,52 @@ void testMatrix(unsigned char r1, unsigned char g1, unsigned char b1, unsigned c
 *
 * @addtogroup displayCharacter
 */
-void writeCharToMatrix( unsigned char c, unsigned char startColumn, unsigned char startBaseline, unsigned char r, unsigned char g, unsigned char b) {
+void writeCharToMatrix( unsigned char c,  int startColumn, unsigned char startBaseline, unsigned char r, unsigned char g, unsigned char b) {
   int x;
   int y;
   int linecount;
+  int i = 0;  
   unsigned char bitvalue;
   linecount = 0;
   x = startColumn;
   y = startBaseline;
-  for (x; x <= startColumn + 4; x++) {
-    if (x < MATRIX_DIMENSION_X) {
-      bitvalue = font[c][linecount];
-      y = startBaseline;
-
-      for (; y <= MATRIX_DIMENSION_Y; y++) {
-        if (bitvalue % 2) {
-          matrix[x][y] = { r, g, b };
+  for (x; x <= startColumn +4; x++) 
+    {
+      if (x < MATRIX_DIMENSION_X && x >= 0) 
+      {
+      if (startColumn < 0 ) 
+      {
+        linecount =0;
+        linecount=(linecount -startColumn)+x;
+        bitvalue = font[c][linecount];
+        y = startBaseline;
+        for (; y <= MATRIX_DIMENSION_Y; y++) 
+        {
+          if (bitvalue % 2 ) {           
+            matrix[x][y] = { r, g, b };
+          }
+          bitvalue = bitvalue >> 1;
         }
-        bitvalue = bitvalue >> 1;
+        
       }
-      linecount++;
+      else
+      {
+        bitvalue = font[c][linecount];
+        y = startBaseline;
+        for (; y <= MATRIX_DIMENSION_Y; y++) 
+        {
+          if (bitvalue % 2) {
+            matrix[x][y] = { r, g, b };
+          }
+          bitvalue = bitvalue >> 1;
+        }
+        linecount++;
+      }
     }
   }
 }
 
-void writeCharToMatrix(unsigned char c, unsigned char startColumn) {
+void writeCharToMatrix(unsigned char c,  int startColumn) {
   unsigned char startBaseline = 1;
   unsigned char r, g, b = 120;
   int x;
@@ -356,20 +379,39 @@ void writeCharToMatrix(unsigned char c, unsigned char startColumn) {
   linecount = 0;
   x = startColumn;
   y = startBaseline;
-  for (x; x <= startColumn + 4; x++) {
-    if (x < MATRIX_DIMENSION_X) {
-      bitvalue = font[c][linecount];
-      y = startBaseline;
-
-      for (; y <= MATRIX_DIMENSION_Y; y++) {
-        if (bitvalue % 2) {
-          matrix[x][y] = { r, g, b };
+  for (x; x <= startColumn +4; x++) 
+  {
+    if (x < MATRIX_DIMENSION_X) 
+    {
+      if (startColumn < 0) {
+        linecount-=x;
+        bitvalue = font[c][linecount];
+        y = startBaseline;
+        for (; y <= MATRIX_DIMENSION_Y; y++) 
+        {
+          if (bitvalue % 2) {
+            matrix[x+linecount][y] = { r, g, b };
+          }
+          bitvalue = bitvalue >> 1;
         }
-        bitvalue = bitvalue >> 1;
+        linecount++;
       }
-      linecount++;
+      else {
+        bitvalue = font[c][linecount];
+        y = startBaseline;
+        for (; y <= MATRIX_DIMENSION_Y; y++) 
+        {
+          if (bitvalue % 2) {
+            matrix[x][y] = { r, g, b };
+          }
+          bitvalue = bitvalue >> 1;
+        }
+        linecount++;
+      }
+      
     }
   }
+  
 }
 
 
@@ -380,7 +422,7 @@ void writeCharToMatrix(unsigned char c, unsigned char startColumn) {
 *
 * @addtogroup application
 */
-void RTCToMatrix(unsigned char runs, unsigned char brightness) {
+void RTCToMatrix(unsigned char runs,  char brightness) {
   char CR = brightness;
   char CG = brightness;
   char CB = brightness;
@@ -538,7 +580,7 @@ int lastCharRow(unsigned char c,int cursor, unsigned char r,unsigned char g, uns
 {
   RGB value = {r,g,b};
   
-if(c != ' '){
+  if(c != ' '){
     for(int y = 1; y<=5; y++){
       
       switch(y){
@@ -586,7 +628,10 @@ if(c != ' '){
               Serial.println(text);
               return cursor +1;
             }
-        if(matrix[cursor][y] ==  matrix[cursor-1][y])          
+        if(matrix[cursor][y] ==  matrix[cursor-1][y])
+        {
+          return cursor +1;            
+        }          
         break;
         default: 
           if(y == 5){
@@ -599,7 +644,11 @@ if(c != ' '){
   else{
     return cursor + 3;
   }
+  
 }
+
+  
+
 
 void weekDays(unsigned char runs, unsigned char brightness) {
 
@@ -725,14 +774,6 @@ void printTemperature(unsigned char runs, unsigned char brightness) {
 *
 * @addtogroup application
 */
-
-/** @brief
-* printig a text which moves from right to left
-* @return void
-*
-* @addtogroup application
-*/
-
 int charLength(char c[])
 {
   int count = 0;
@@ -779,7 +820,7 @@ void shiftTextV3(char CAPSLK_text[],int runs, unsigned char brightness)
   for (int colorIterator = 0; colorIterator < run; colorIterator++) {
     
     writeRainbowToMatrix(colorIterator);   
-      if(colorIterator%6 == 0){
+      if(colorIterator%4 == 0){
         x--;
       }
       writeStringToMatrix(CAPSLK_text, x,brightness);
@@ -853,10 +894,10 @@ void loop() {
   //dateAndClock();
   //fillMatrix(100, 0, 10); delay(3000);
   //testMatrix(0,50,100,10,100,10);
-  unsigned char runs = 3;
+  unsigned char runs = 4;
   unsigned char brightness = 250;
 
-  shiftTextV3("WILLKOMMEN AN DER HTL BULME",runs,  brightness);
+  shiftTextV3("WILLKOMMEN AN DER HTL BULME\0",runs,  brightness);
   //shiftTextV2("Hallo Bulme");
   // weekDays(runs, brightness);
   // printTemperature(runs, brightness);
