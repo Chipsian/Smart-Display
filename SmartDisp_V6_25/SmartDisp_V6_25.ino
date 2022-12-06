@@ -3,10 +3,12 @@
 * displays times, date, humidity and temperatures on a Matrix
 *
 * @author  Lukas Christian
-* @version V6.21 2020/04/14
+* @version V7.1 2020/04/14
 * @since   2019-09
-* @date 2019/Sep/09 - 2020/Apr/17
+* @date 2019/Sep/09 - 2022/Dez/08
 */
+
+
 
 /* control leds*/
 #include <Adafruit_NeoPixel.h>
@@ -33,7 +35,7 @@
 const char *ssid = "TP-LINK_AAB9";
 const char *password = "08728425";
 
-const long utcOffsetInSeconds = 3600 * 2;
+const long utcOffsetInSeconds = 3600;
 
 char wday[7][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
 
@@ -83,8 +85,7 @@ struct RGB {
   unsigned char r;
   unsigned char g;
   unsigned char b;
-  bool operator==(const RGB& other)
-  {
+  bool operator==(const RGB &other) {
     return other.r == this->r & other.g == this->g & other.b == this->b;
   }
 };
@@ -228,9 +229,9 @@ void displ(bool copy_black) {
 */
 void writeRainbowToMatrix(unsigned char iteration) {
   unsigned char wheelPos;  ///< variable used to calculate the colors
-  unsigned char r;                  ///< red color value
-  unsigned char g;                  ///< green color value
-  unsigned char b;                  ///< blue color value
+  unsigned char r;         ///< red color value
+  unsigned char g;         ///< green color value
+  unsigned char b;         ///< blue color value
 
   // iterate over all x and y values of the matrix
   for (int x = 0; x < MATRIX_DIMENSION_X; x++) {
@@ -324,40 +325,36 @@ void testMatrix(unsigned char r1, unsigned char g1, unsigned char b1, unsigned c
 *
 * @addtogroup displayCharacter
 */
-void writeCharToMatrix( unsigned char c,  int startColumn, unsigned char startBaseline, unsigned char r, unsigned char g, unsigned char b) {
+void writeCharToMatrix(unsigned char c, int startColumn, unsigned char startBaseline, unsigned char r, unsigned char g, unsigned char b) {
   int x;
   int y;
   int linecount;
-  int i = 0;  
+  int i = 0;
   unsigned char bitvalue;
   linecount = 0;
   x = startColumn;
   y = startBaseline;
-  for (x; x <= startColumn +4; x++) 
-    {
-      if (x < MATRIX_DIMENSION_X && x >= 0) 
-      {
-      if (startColumn < 0 ) 
-      {
-        linecount =0;
-        linecount=(linecount -startColumn)+x;
+  if (c == ',') {
+    y = 0;
+  }
+  for (x; x <= startColumn + 4; x++) {
+    if (x < MATRIX_DIMENSION_X && x >= 0) {
+      if (startColumn < 0) {
+        linecount = 0;
+        linecount = (linecount - startColumn) + x;
         bitvalue = font[c][linecount];
         y = startBaseline;
-        for (; y <= MATRIX_DIMENSION_Y; y++) 
-        {
-          if (bitvalue % 2 ) {           
+        for (; y <= MATRIX_DIMENSION_Y; y++) {
+          if (bitvalue % 2) {
             matrix[x][y] = { r, g, b };
           }
           bitvalue = bitvalue >> 1;
         }
-        
-      }
-      else
-      {
+
+      } else {
         bitvalue = font[c][linecount];
         y = startBaseline;
-        for (; y <= MATRIX_DIMENSION_Y; y++) 
-        {
+        for (; y <= MATRIX_DIMENSION_Y; y++) {
           if (bitvalue % 2) {
             matrix[x][y] = { r, g, b };
           }
@@ -369,7 +366,7 @@ void writeCharToMatrix( unsigned char c,  int startColumn, unsigned char startBa
   }
 }
 
-void writeCharToMatrix(unsigned char c,  int startColumn) {
+void writeCharToMatrix(unsigned char c, int startColumn) {
   unsigned char startBaseline = 1;
   unsigned char r, g, b = 120;
   int x;
@@ -379,28 +376,23 @@ void writeCharToMatrix(unsigned char c,  int startColumn) {
   linecount = 0;
   x = startColumn;
   y = startBaseline;
-  for (x; x <= startColumn +4; x++) 
-  {
-    if (x < MATRIX_DIMENSION_X) 
-    {
+  for (x; x <= startColumn + 4; x++) {
+    if (x < MATRIX_DIMENSION_X) {
       if (startColumn < 0) {
-        linecount-=x;
+        linecount -= x;
         bitvalue = font[c][linecount];
         y = startBaseline;
-        for (; y <= MATRIX_DIMENSION_Y; y++) 
-        {
+        for (; y <= MATRIX_DIMENSION_Y; y++) {
           if (bitvalue % 2) {
-            matrix[x+linecount][y] = { r, g, b };
+            matrix[x + linecount][y] = { r, g, b };
           }
           bitvalue = bitvalue >> 1;
         }
         linecount++;
-      }
-      else {
+      } else {
         bitvalue = font[c][linecount];
         y = startBaseline;
-        for (; y <= MATRIX_DIMENSION_Y; y++) 
-        {
+        for (; y <= MATRIX_DIMENSION_Y; y++) {
           if (bitvalue % 2) {
             matrix[x][y] = { r, g, b };
           }
@@ -408,10 +400,8 @@ void writeCharToMatrix(unsigned char c,  int startColumn) {
         }
         linecount++;
       }
-      
     }
   }
-  
 }
 
 
@@ -422,7 +412,7 @@ void writeCharToMatrix(unsigned char c,  int startColumn) {
 *
 * @addtogroup application
 */
-void RTCToMatrix(unsigned char runs,  char brightness) {
+void RTCToMatrix(unsigned char runs, char brightness) {
   char CR = brightness;
   char CG = brightness;
   char CB = brightness;
@@ -576,80 +566,88 @@ int countCharLenght(char weekday) {
   //delay(7000);
 }
 
-int lastCharRow(unsigned char c,int cursor, unsigned char r,unsigned char g, unsigned char b)
-{
-  RGB value = {r,g,b};
-  
-  if(c != ' '){
-    for(int y = 1; y<=5; y++){
-      
-      switch(y){
+int lastCharRow(char c, int cursor, unsigned char r, unsigned char g, unsigned char b) {
+  RGB value = { r, g, b };
+
+  if (c != ' ') {
+    for (int y = 1; y <= 5; y++) {
+
+      switch (y) {
         case 1:
-          if(matrix[cursor][y] == value && matrix[cursor-1][y] == value)
-          {
+          if (matrix[cursor][y] == value && matrix[cursor - 1][y] == value) {
             char text[50];
-            sprintf(text, "r,g,b = %d;%d;%d; %d", r,g,b, cursor +1);
+            sprintf(text, "r,g,b = %d;%d;%d; %d", r, g, b, cursor + 1);
             Serial.println(text);
-            return cursor +1;
+            return cursor + 1;
           }
-        break;
+          break;
         case 2:
-            if(matrix[cursor][y] == value && (matrix[cursor-1][y-1] == value || matrix[cursor-1][y-1] == value || matrix[cursor-1][y+1] == value))
-            {
-              char text[50];
-              sprintf(text, "r,g,b = %d;%d;%d; %d", r,g,b, cursor +1);
-              Serial.println(text);
-              return cursor +1;
-            }
-        break;
+          if (matrix[cursor][y] == value && (matrix[cursor - 1][y - 1] == value || matrix[cursor - 1][y - 1] == value || matrix[cursor - 1][y + 1] == value)) {
+            char text[50];
+            sprintf(text, "r,g,b = %d;%d;%d; %d", r, g, b, cursor + 1);
+            Serial.println(text);
+            return cursor + 1;
+          }
+          break;
         case 3:
-          if(matrix[cursor][y] == value && matrix[cursor-1][y] == value)
-            {
-              char text[50];
-              sprintf(text, "r,g,b = %d;%d;%d; %d", r,g,b, cursor +1);
-              Serial.println(text);
-              return cursor +1;
-            }
-        break;
+          if (matrix[cursor][y] == value && matrix[cursor - 1][y] == value) {
+            char text[50];
+            sprintf(text, "r,g,b = %d;%d;%d; %d", r, g, b, cursor + 1);
+            Serial.println(text);
+            return cursor + 1;
+          }
+          break;
         case 4:
-          if(matrix[cursor][y] == value && (matrix[cursor-1][y-1] == value || matrix[cursor-1][y-1] == value || matrix[cursor-1][y+1] == value))
-            {
-              char text[50];
-              sprintf(text, "r,g,b = %d;%d;%d; %d", r,g,b, cursor +1);
-              Serial.println(text);
-              return cursor +1;
-            }
-        break;
+          if (matrix[cursor][y] == value && (matrix[cursor - 1][y - 1] == value || matrix[cursor - 1][y - 1] == value || matrix[cursor - 1][y + 1] == value)) {
+            char text[50];
+            sprintf(text, "r,g,b = %d;%d;%d; %d", r, g, b, cursor + 1);
+            Serial.println(text);
+            return cursor + 1;
+          }
+          break;
         case 5:
-          if(matrix[cursor][y] == value && matrix[cursor-1][y] == value)
-            {
-              char text[50];
-              sprintf(text, "r,g,b = %d;%d;%d; %d", r,g,b, cursor +1);
-              Serial.println(text);
-              return cursor +1;
-            }
-        if(matrix[cursor][y] ==  matrix[cursor-1][y])
-        {
-          return cursor +1;            
-        }          
-        break;
-        default: 
-          if(y == 5){
+          if (matrix[cursor][y] == value && matrix[cursor - 1][y] == value) {
+            char text[50];
+            sprintf(text, "r,g,b = %d;%d;%d; %d", r, g, b, cursor + 1);
+            Serial.println(text);
+            return cursor + 1;
+          }
+          if (matrix[cursor][y] == matrix[cursor - 1][y]) {
+            return cursor + 1;
+          }
+          break;
+        default:
+          if (y == 5) {
             return cursor;
           }
-        break;
-      }  
+          break;
+      }
     }
   }
-  else{
-    return cursor + 3;
-  }
-  
+  return cursor + 3;
 }
 
-  
 
+void weekDays( unsigned char runs, unsigned char brightness) {
+  int i;
+  unsigned char CR = brightness;
+  unsigned char CG = brightness;
+  unsigned char CB = brightness;
+  int week_day;
+  week_day = t.wday;
+  int x = 3;
 
+  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+
+    writeRainbowToMatrix(colorIterator);
+
+    writeStringToMatrix(wday[week_day], x, brightness);
+    displ(true);
+    pixels.show();
+    delay(10);
+  }
+}
+/*
 void weekDays(unsigned char runs, unsigned char brightness) {
 
   int i;
@@ -670,19 +668,19 @@ void weekDays(unsigned char runs, unsigned char brightness) {
     for (i = 0; i <= 2; i++) {
       if (i == 0) {
         writeCharToMatrix(wday[week_day][i], cursor, 1, CR, CG, CB);
-        cursor = cursor + lastCharRow(wday[week_day][i],cursor + countCharLenght(wday[week_day][i]),CR, CG, CB);
+        cursor = cursor + lastCharRow(wday[week_day][i], cursor + countCharLenght(wday[week_day][i]), CR, CG, CB);
         //printf("cursor: %d\n", cursor);
         //delay(3000);
       }
       if (i == 1) {
         writeCharToMatrix(wday[week_day][i], cursor, 1, CR, CG, CB);
-        cursor = cursor + lastCharRow(wday[week_day][i],cursor + countCharLenght(wday[week_day][i]),CR, CG, CB);
+        cursor = cursor + lastCharRow(wday[week_day][i], cursor + countCharLenght(wday[week_day][i]), CR, CG, CB);
         // printf("cursor: %d\n", cursor);
         // delay(3000);
       }
       if (i == 2) {
         writeCharToMatrix(wday[week_day][i], cursor, 1, CR, CG, CB);
-        cursor = cursor + lastCharRow(wday[week_day][i],cursor + countCharLenght(wday[week_day][i]),CR, CG, CB);
+        cursor = cursor + lastCharRow(wday[week_day][i], cursor + countCharLenght(wday[week_day][i]), CR, CG, CB);
         //printf("cursor: %d\n", cursor);
         //delay(3000);
       }
@@ -693,7 +691,7 @@ void weekDays(unsigned char runs, unsigned char brightness) {
     delay(30);
   }
 }
-
+*/
 /** @brief
 * printig the humidity time to the matrix with Rainbow background
 * @return void
@@ -774,66 +772,124 @@ void printTemperature(unsigned char runs, unsigned char brightness) {
 *
 * @addtogroup application
 */
-int charLength(char c[])
-{
-  int count = 0;
-  for(int i =0; c[i] != '\0';i++)
-  {
+
+int stringLength(char c[]) {
+  int count;
+  for (int i = 0; c[i] != '\0'; i++) {
     count++;
   }
+  Serial.printf("stringLength:");
+  Serial.printf("%d\n\n", count);
   return count;
 }
 
-void writeStringToMatrix(char CAPSLK_text[],int x, unsigned char brightness)
-{ 
+int charLength(char c[]) {
+  int count = 0;
+  for (int i = 0; c[i] != '\0'; i++) {
+    count += lengthOfEveryChar(c[i]);
+  }
+  Serial.printf("charLength:");
+
+  Serial.printf("%d\n\n", count);
+  return count;
+}
+
+int touch(char c, char last_char, int last_charlength, int cursor, unsigned char brightness) {
+  unsigned char r = brightness, g = brightness, b = brightness;
+  if (matrix[cursor][0].r == r && matrix[cursor][0].g == g && matrix[cursor][0].b == b && matrix[cursor - 1][0].r == r && matrix[cursor - 1][0].g == g && matrix[cursor - 1][0].b == b) {
+    return 1;
+  }
+  return 0;
+}
+
+int lengthOfEveryChar(char c) {
+  int count = 0;
+  for (int i = 0; i <= 4; i++) {
+    if (font[c][i] != 0x00) {
+      count++;
+    } else if (c == ' ') {
+      Serial.printf("lengthOfEveryChar:");
+      Serial.printf(" %c::", c);
+      Serial.printf("%d\n\n", count);
+      return 3;
+    }
+  }
+  Serial.printf("lengthOfEveryChar:");
+  Serial.printf(" %c::", c);
+  Serial.printf("%d\n\n", count);
+  return count;
+}
+
+int lastRowOfChar(char c, char last_char, int last_char_lenght, int cursor) {
+  if (lengthOfEveryChar(c) == 1) {
+
+    if (font[last_char][4] != 0x00)
+      return 1;
+  } else if (lengthOfEveryChar(c) == ' ') {
+    return 0;
+  }
+  return 0;
+}
+
+void writeStringToMatrix(char CAPSLK_text[], int x, unsigned char brightness) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
-  int k;
+  int k = x;
   int charcount = 0;
-  for(int i=0; i <= 5*(charLength(CAPSLK_text)); i++)
-  {
-    k = x+i*5;
+  char last_char;
+  int last_char_lenght = 0;
+  int cursor = 0;
+  for (int i = 0; i <= (stringLength(CAPSLK_text)); i++) {
+    last_char = CAPSLK_text[i - 1];
+    last_char_lenght = lengthOfEveryChar(CAPSLK_text[i - 1]);
+    cursor = k + lengthOfEveryChar(CAPSLK_text[i]);
     writeCharToMatrix(CAPSLK_text[i], k, 1, CR, CG, CB);
-
-    if(i%5==0 && i >= 5)
-    {
+    k = k + lengthOfEveryChar(CAPSLK_text[i]) + touch(CAPSLK_text[i], CAPSLK_text[i - 1], last_char_lenght, k, brightness);  //lastRowOfChar(CAPSLK_text[i], last_char,last_char_lenght, cursor)
+    if (i % 5 == 0 && i >= 5) {
       charcount++;
     }
-     Serial.print(CAPSLK_text[charcount]);
-     Serial.print(" : ");
-    
-      Serial.print(i/5);
-      Serial.print("\n");
-    
+    Serial.print(CAPSLK_text[charcount]);
+    Serial.print(" : ");
+
+    Serial.print(i / 5);
+    Serial.print("\n");
+    Serial.print("x = ");
+    Serial.print(x);
+    Serial.print("\n");
   }
 }
 
-void shiftTextV3(char CAPSLK_text[],int runs, unsigned char brightness)
-{
+void shiftTextV3(char CAPSLK_text[], unsigned char brightness) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
   int x;
-  int run =256 * runs;
+  char lastChar = '0';
+  int charCount;
   x = 18;
-  for (int colorIterator = 0; colorIterator < run; colorIterator++) {
-    
-    writeRainbowToMatrix(colorIterator);   
-      if(colorIterator%4 == 0){
-        x--;
-      }
-      writeStringToMatrix(CAPSLK_text, x,brightness);
-      displ(true);
-      pixels.show();
-      delay(30);
-    }
+  int txtRowLen = charLength(CAPSLK_text) * -1;
+  for (charCount = 0; lastChar == '\n'; charCount++) {
+    lastChar = CAPSLK_text[charCount];
+  }
+  Serial.print("\ntextRowLEN: ");
+  Serial.print(txtRowLen);
+  Serial.print("\n");
+  for (int colorIterator = 0; x > (txtRowLen); colorIterator++) {
 
-   
+    writeRainbowToMatrix(colorIterator);
+    if (colorIterator % 1 == 0) {
+      x--;
+    }
+    writeStringToMatrix(CAPSLK_text, x, brightness);
+    displ(true);
+    pixels.show();
+    delay(5);
+  }
 }
 /** @brief 
 * startup function
-* @retrun void
+* @return void
 * @addtogroup mainFunction 
 * 
 */
@@ -858,7 +914,6 @@ void setup() {
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
-    
   }
   Serial.print("\n");
   timeClient.begin();
@@ -894,16 +949,16 @@ void loop() {
   //dateAndClock();
   //fillMatrix(100, 0, 10); delay(3000);
   //testMatrix(0,50,100,10,100,10);
-  unsigned char runs = 4;
-  unsigned char brightness = 250;
 
-  shiftTextV3("WILLKOMMEN AN DER HTL BULME\0",runs,  brightness);
+  unsigned char brightness = 250;
+  int runs = 1;
   //shiftTextV2("Hallo Bulme");
-  // weekDays(runs, brightness);
-  // printTemperature(runs, brightness);
-  /*datetime(runs, brightness);
-  
+  weekDays(runs, brightness);
+  printTemperature(runs, brightness);
+  datetime(runs, brightness);
+
   RTCToMatrix(runs, brightness);
   showYear(runs, brightness);
-  humidity(runs, brightness);*/
+  humidity(runs, brightness);
+  shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", brightness);
 }
