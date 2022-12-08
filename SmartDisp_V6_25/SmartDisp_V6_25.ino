@@ -417,12 +417,13 @@ void RTCToMatrix(unsigned char runs, char brightness) {
   char CG = brightness;
   char CB = brightness;
 
+  int iteration = *colorIterator;
   unsigned char hour_tenth;
   unsigned char hour_ones;
   unsigned char min_tenth;
   unsigned char min_ones;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; (*colorIterator) < (256 * runs) + iteration; (*colorIterator)++) {  //for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
 
 
     DS3231_get(&t);  //get the value and pass to the function the pointer to t, that make an lower memory fingerprint and faster execution than use return
@@ -434,8 +435,8 @@ void RTCToMatrix(unsigned char runs, char brightness) {
     min_tenth = t.min / 10;
     min_ones = t.min % 10;
 
-    if (colorIterator % 64 >= 32) {
-      writeRainbowToMatrix(colorIterator);
+    if (*colorIterator % 64 >= 32) {
+      writeRainbowToMatrix(*colorIterator);
 
       writeCharToMatrix(hour_tenth + _atoz, 2, 1, CR, CG, CB);
       writeCharToMatrix(hour_ones + _atoz, 6, 1, CR, CG, CB);
@@ -445,7 +446,7 @@ void RTCToMatrix(unsigned char runs, char brightness) {
     } else {
       writeCharToMatrix(58, 10, 1, NULL, NULL, NULL);
 
-      writeRainbowToMatrix(colorIterator);
+      writeRainbowToMatrix(*colorIterator);
       writeCharToMatrix(hour_tenth + _atoz, 2, 1, CR, CG, CB);
       writeCharToMatrix(hour_ones + _atoz, 6, 1, CR, CG, CB);
       writeCharToMatrix(min_tenth + _atoz, 12, 1, CR, CG, CB);
@@ -453,8 +454,9 @@ void RTCToMatrix(unsigned char runs, char brightness) {
     }
     displ(true);
     pixels.show();
-    delay(30);
+    delay(time_ms);
   }
+  *colorIterator -= (256 * runs);
 }
 
 
@@ -467,17 +469,18 @@ void RTCToMatrix(unsigned char runs, char brightness) {
 *
 * @addtogroup application
 */
-void datetime(unsigned char runs, unsigned char brightness) {
+void datetime(int *colorIterator, unsigned char runs, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
 
+  int iteration = *colorIterator;
   int day_tenth;
   int day_ones;
   int month_tenth;
   int month_ones;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; (*colorIterator) < (256 * runs) + iteration; (*colorIterator)++) {  //for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++)
 
     DS3231_get(&t);  //get the value and pass to the function the pointer to t, that make an lower memory fingerprint and faster execution than use return
     //DS3231_get() will use the pointer of t to directly change t value (faster, lower memory used)
@@ -488,8 +491,8 @@ void datetime(unsigned char runs, unsigned char brightness) {
     month_ones = t.mon % 10;
 
 
-    if (colorIterator % 64 >= 32) {
-      writeRainbowToMatrix(colorIterator);
+    if (*colorIterator % 64 >= 32) {
+      writeRainbowToMatrix(*colorIterator);
 
       writeCharToMatrix(day_tenth + _atoz, 2, 1, CR, CG, CB);
       writeCharToMatrix(day_ones + _atoz, 6, 1, CR, CG, CB);
@@ -501,7 +504,7 @@ void datetime(unsigned char runs, unsigned char brightness) {
       writeCharToMatrix(46, 9, 1, NULL, NULL, NULL);
       writeCharToMatrix(46, 18, 1, NULL, NULL, NULL);
 
-      writeRainbowToMatrix(colorIterator);
+      writeRainbowToMatrix(*colorIterator);
       writeCharToMatrix(day_tenth + _atoz, 2, 1, CR, CG, CB);
       writeCharToMatrix(day_ones + _atoz, 6, 1, CR, CG, CB);
       writeCharToMatrix(month_tenth + _atoz, 11, 1, CR, CG, CB);
@@ -510,21 +513,23 @@ void datetime(unsigned char runs, unsigned char brightness) {
 
     displ(true);
     pixels.show();
-    delay(30);
+    delay(time_ms);
   }
+  *colorIterator -= (256 * runs);
 }
 
-void showYear(unsigned char runs, unsigned char brightness) {
+void showYear(int *colorIterator, unsigned char runs, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
 
+  int iteration = *colorIterator;
   int year_tenth;
   int year_ones;
   int year_hun;
   int month_thou;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; (*colorIterator) < (256 * runs) + iteration; (*colorIterator)++) {
 
     DS3231_get(&t);  //get the value and pass to the function the pointer to t, that make an lower memory fingerprint and faster execution than use return
     //DS3231_get() will use the pointer of t to directly change t value (faster, lower memory used)
@@ -534,7 +539,7 @@ void showYear(unsigned char runs, unsigned char brightness) {
     year_ones = t.year % 10;
     year_tenth = (t.year % 100) / 10;
 
-    writeRainbowToMatrix(colorIterator);
+    writeRainbowToMatrix(*colorIterator);
 
     writeCharToMatrix(month_thou + _atoz, 3, 1, CR, CG, CB);
     writeCharToMatrix(year_hun + _atoz, 7, 1, CR, CG, CB);
@@ -543,8 +548,9 @@ void showYear(unsigned char runs, unsigned char brightness) {
 
     displ(true);
     pixels.show();
-    delay(30);
+    delay(time_ms);
   }
+  *colorIterator -= (256 * runs);
 }
 
 int countCharLenght(char weekday) {
@@ -628,24 +634,26 @@ int lastCharRow(char c, int cursor, unsigned char r, unsigned char g, unsigned c
 }
 
 
-void weekDays( unsigned char runs, unsigned char brightness) {
-  int i;
+void weekDays(int *colorIterator, unsigned char runs, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
   int week_day;
+  int runcount = 0;
+  int iterator = *colorIterator;
   week_day = t.wday;
   int x = 3;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; *colorIterator < (256 * runs) + iterator; (*colorIterator)++) {
 
-    writeRainbowToMatrix(colorIterator);
+    writeRainbowToMatrix(*colorIterator);
 
     writeStringToMatrix(wday[week_day], x, brightness);
     displ(true);
     pixels.show();
-    delay(10);
+    delay(time_ms);
   }
+  *colorIterator -= (256 * runs);
 }
 /*
 void weekDays(unsigned char runs, unsigned char brightness) {
@@ -698,19 +706,20 @@ void weekDays(unsigned char runs, unsigned char brightness) {
 *
 * @addtogroup application
 */
-void humidity(unsigned char runs, unsigned char brightness) {
+void humidity(int *colorIterator, unsigned char runs, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
 
+  int iteration = *colorIterator;
   int hum_tenth;
   int hum_ones;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; (*colorIterator) < (256 * runs) + iteration; (*colorIterator)++) {  //for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
     // Get temperature event and print its value.
     sensors_event_t event;
 
-    writeRainbowToMatrix(colorIterator);
+    writeRainbowToMatrix(*colorIterator);
 
     dht.humidity().getEvent(&event);
     //humidity Digits
@@ -719,15 +728,16 @@ void humidity(unsigned char runs, unsigned char brightness) {
       hum_tenth = (int)event.relative_humidity / 10;
       hum_ones = (int)event.relative_humidity % 10;
       //delay(delayMS);
-      writeRainbowToMatrix(colorIterator);
+      writeRainbowToMatrix(*colorIterator);
       writeCharToMatrix(hum_tenth + _atoz, 4, 1, CR, CG, CB);
       writeCharToMatrix(hum_ones + _atoz, 8, 1, CR, CG, CB);
       writeCharToMatrix('%', 13, 1, CR, CG, CB);
     }
     displ(true);
     pixels.show();
-    delay(30);
+    delay(time_ms);
   }
+  *colorIterator -= (256 * runs);
 }
 /** @brief
 * printig the temperatures to the matrix with Rainbow background
@@ -735,21 +745,22 @@ void humidity(unsigned char runs, unsigned char brightness) {
 *
 * @addtogroup application 
 */
-void printTemperature(unsigned char runs, unsigned char brightness) {
+void printTemperature(int *colorIterator, unsigned char runs, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
 
+  int iterator = *colorIterator;
   int temp_tenth;
   int temp_ones;
 
-  for (int colorIterator = 0; colorIterator < 256 * runs; colorIterator++) {
+  for (*colorIterator; *colorIterator < (256 * runs) + iterator; (*colorIterator)++) {
     //delay(delayMS);
 
     // Get temperature event and print its value.
     sensors_event_t event;
 
-    writeRainbowToMatrix(colorIterator);
+    writeRainbowToMatrix(*colorIterator);
     dht.temperature().getEvent(&event);
     if (isnan(event.temperature)) {
     } else {
@@ -762,8 +773,9 @@ void printTemperature(unsigned char runs, unsigned char brightness) {
     }
     displ(true);
     pixels.show();
-    delay(30);
+    delay(time_ms);
   }
+   *colorIterator -= (256 * runs);
 }
 
 /** @brief
@@ -794,12 +806,19 @@ int charLength(char c[]) {
   return count;
 }
 
-int touch(char c, char last_char, int last_charlength, int cursor, unsigned char brightness) {
-  unsigned char r = brightness, g = brightness, b = brightness;
-  if (matrix[cursor][0].r == r && matrix[cursor][0].g == g && matrix[cursor][0].b == b && matrix[cursor - 1][0].r == r && matrix[cursor - 1][0].g == g && matrix[cursor - 1][0].b == b) {
-    return 1;
+int touch(char c, char last_char, int last_charlength) {
+ 
+  if ((font[c][0] & font[last_char][last_charlength-1]) == 0b000000 ) {    
+    if ((font[c][0] & font[last_char][last_charlength-2]) == 0b00000) {
+      return -1;
+    }
+    else{
+      return 0; 
+    }
   }
-  return 0;
+  else {    
+    return 1;
+  }  
 }
 
 int lengthOfEveryChar(char c) {
@@ -845,22 +864,24 @@ void writeStringToMatrix(char CAPSLK_text[], int x, unsigned char brightness) {
     last_char_lenght = lengthOfEveryChar(CAPSLK_text[i - 1]);
     cursor = k + lengthOfEveryChar(CAPSLK_text[i]);
     writeCharToMatrix(CAPSLK_text[i], k, 1, CR, CG, CB);
-    k = k + lengthOfEveryChar(CAPSLK_text[i]) + touch(CAPSLK_text[i], CAPSLK_text[i - 1], last_char_lenght, k, brightness);  //lastRowOfChar(CAPSLK_text[i], last_char,last_char_lenght, cursor)
+    k = k + lengthOfEveryChar(CAPSLK_text[i]) + touch(CAPSLK_text[i], CAPSLK_text[i - 1], last_char_lenght);  //lastRowOfChar(CAPSLK_text[i], last_char,last_char_lenght, cursor)
     if (i % 5 == 0 && i >= 5) {
       charcount++;
     }
     Serial.print(CAPSLK_text[charcount]);
     Serial.print(" : ");
-
     Serial.print(i / 5);
     Serial.print("\n");
     Serial.print("x = ");
     Serial.print(x);
     Serial.print("\n");
+    Serial.print("last_char_length:");
+    Serial.print(last_char_lenght);
+    Serial.print("\n");
   }
 }
 
-void shiftTextV3(char CAPSLK_text[], unsigned char brightness) {
+void shiftTextV3(char CAPSLK_text[], int *colorIterator, unsigned char brightness, int time_ms) {
   unsigned char CR = brightness;
   unsigned char CG = brightness;
   unsigned char CB = brightness;
@@ -872,20 +893,18 @@ void shiftTextV3(char CAPSLK_text[], unsigned char brightness) {
   for (charCount = 0; lastChar == '\n'; charCount++) {
     lastChar = CAPSLK_text[charCount];
   }
-  Serial.print("\ntextRowLEN: ");
-  Serial.print(txtRowLen);
-  Serial.print("\n");
-  for (int colorIterator = 0; x > (txtRowLen); colorIterator++) {
+  for (*colorIterator = 0; x > (txtRowLen); (*colorIterator)++) {
 
-    writeRainbowToMatrix(colorIterator);
-    if (colorIterator % 1 == 0) {
+    writeRainbowToMatrix(*colorIterator);
+    if (*colorIterator % 1 == 0) {
       x--;
     }
     writeStringToMatrix(CAPSLK_text, x, brightness);
     displ(true);
     pixels.show();
-    delay(5);
+    delay(time_ms);
   }
+  (*colorIterator) = (*colorIterator) % 256;
 }
 /** @brief 
 * startup function
@@ -952,13 +971,19 @@ void loop() {
 
   unsigned char brightness = 250;
   int runs = 1;
-  //shiftTextV2("Hallo Bulme");
-  weekDays(runs, brightness);
-  printTemperature(runs, brightness);
-  datetime(runs, brightness);
+  int colorIterator = 0;
+  int ms = 30;
+  
 
-  RTCToMatrix(runs, brightness);
-  showYear(runs, brightness);
-  humidity(runs, brightness);
-  shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", brightness);
+  while (1) {
+
+    weekDays(&colorIterator, runs, brightness, ms);
+    // datetime(&colorIterator, runs, brightness, ms);
+
+    // RTCToMatrix(&colorIterator, runs, brightness, ms);
+    // showYear(&colorIterator, runs, brightness, ms);
+    // printTemperature(&colorIterator, runs, brightness, ms);
+    // humidity(&colorIterator, runs, brightness, ms);
+    shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, brightness, ms);
+  }
 }
