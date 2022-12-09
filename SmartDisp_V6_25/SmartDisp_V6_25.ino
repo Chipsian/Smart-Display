@@ -412,7 +412,7 @@ void writeCharToMatrix(unsigned char c, int startColumn) {
 *
 * @addtogroup application
 */
-void RTCToMatrix(unsigned char runs, char brightness) {
+void RTCToMatrix(int *colorIterator, unsigned char runs, char brightness, int time_ms) {
   char CR = brightness;
   char CG = brightness;
   char CB = brightness;
@@ -642,7 +642,7 @@ void weekDays(int *colorIterator, unsigned char runs, unsigned char brightness, 
   int runcount = 0;
   int iterator = *colorIterator;
   week_day = t.wday;
-  int x = 3;
+  int x = 5;
 
   for (*colorIterator; *colorIterator < (256 * runs) + iterator; (*colorIterator)++) {
 
@@ -806,10 +806,12 @@ int charLength(char c[]) {
   return count;
 }
 
-int touch(char c, char last_char, int last_charlength) {
- 
-  if ((font[c][0] & font[last_char][last_charlength-1]) == 0b000000 ) {    
-    if ((font[c][0] & font[last_char][last_charlength-2]) == 0b00000) {
+int touch(char c, char last_char, int index_last_char_length) {
+ if (c == ' ' || last_char == ' ') {
+ return 0;
+ }
+  if ((font[c][0] & font[last_char][index_last_char_length]) == 0b000000 ) {    
+    if ((font[c][0] & font[last_char][index_last_char_length-1]) == 0b00000  ) {
       return -1;
     }
     else{
@@ -824,18 +826,16 @@ int touch(char c, char last_char, int last_charlength) {
 int lengthOfEveryChar(char c) {
   int count = 0;
   for (int i = 0; i <= 4; i++) {
-    if (font[c][i] != 0x00) {
-      count++;
-    } else if (c == ' ') {
-      Serial.printf("lengthOfEveryChar:");
-      Serial.printf(" %c::", c);
-      Serial.printf("%d\n\n", count);
+    if (c == ' ') {
       return 3;
     }
+     else if (font[c][i] != 0x00) {
+      count++;
+    } 
   }
-  Serial.printf("lengthOfEveryChar:");
-  Serial.printf(" %c::", c);
-  Serial.printf("%d\n\n", count);
+  // Serial.printf("lengthOfEveryChar:");
+  // Serial.printf(" %c::", c);
+  // Serial.printf("%d\n\n", count);
   return count;
 }
 
@@ -857,27 +857,40 @@ void writeStringToMatrix(char CAPSLK_text[], int x, unsigned char brightness) {
   int k = x;
   int charcount = 0;
   char last_char;
-  int last_char_lenght = 0;
-  int cursor = 0;
-  for (int i = 0; i <= (stringLength(CAPSLK_text)); i++) {
-    last_char = CAPSLK_text[i - 1];
-    last_char_lenght = lengthOfEveryChar(CAPSLK_text[i - 1]);
-    cursor = k + lengthOfEveryChar(CAPSLK_text[i]);
+  int index_last_char_lenght = 0;
+  writeCharToMatrix(CAPSLK_text[0], k, 1, CR, CG, CB);
+  k = k + lengthOfEveryChar(CAPSLK_text[0]) ;   
+  Serial.print(CAPSLK_text[charcount]);
+  Serial.print(lengthOfEveryChar(CAPSLK_text[0]));
+  Serial.print("\nx = ");
+  Serial.print(x);
+    charcount++;
+  for (int i = 1; i <= (stringLength(CAPSLK_text)); i++) {
+    index_last_char_lenght = lengthOfEveryChar(CAPSLK_text[i - 1])-1;
+    Serial.print(index_last_char_lenght);   
+    int tch =touch(CAPSLK_text[i], CAPSLK_text[i - 1], index_last_char_lenght);
+    Serial.print("\ntouch: ");
+    Serial.print(tch);    
+    Serial.print("\n k = ");
+    k = k + tch;
+    Serial.print(k); 
+      
+    Serial.print("\n");
     writeCharToMatrix(CAPSLK_text[i], k, 1, CR, CG, CB);
-    k = k + lengthOfEveryChar(CAPSLK_text[i]) + touch(CAPSLK_text[i], CAPSLK_text[i - 1], last_char_lenght);  //lastRowOfChar(CAPSLK_text[i], last_char,last_char_lenght, cursor)
-    if (i % 5 == 0 && i >= 5) {
-      charcount++;
-    }
+    k = k + lengthOfEveryChar(CAPSLK_text[i]);  //lastRowOfChar(CAPSLK_text[i], last_char,last_char_lenght, cursor)
+
+    
     Serial.print(CAPSLK_text[charcount]);
     Serial.print(" : ");
-    Serial.print(i / 5);
+    Serial.print(i );
     Serial.print("\n");
     Serial.print("x = ");
     Serial.print(x);
     Serial.print("\n");
     Serial.print("last_char_length:");
-    Serial.print(last_char_lenght);
-    Serial.print("\n");
+    Serial.print(index_last_char_lenght);
+    Serial.print("\n\n");
+      charcount++;
   }
 }
 
@@ -978,12 +991,12 @@ void loop() {
   while (1) {
 
     weekDays(&colorIterator, runs, brightness, ms);
-    // datetime(&colorIterator, runs, brightness, ms);
+    datetime(&colorIterator, runs, brightness, ms);
 
-    // RTCToMatrix(&colorIterator, runs, brightness, ms);
-    // showYear(&colorIterator, runs, brightness, ms);
-    // printTemperature(&colorIterator, runs, brightness, ms);
-    // humidity(&colorIterator, runs, brightness, ms);
+    RTCToMatrix(&colorIterator, runs, brightness, ms);
+    showYear(&colorIterator, runs, brightness, ms);
+    printTemperature(&colorIterator, runs, brightness, ms);
+    humidity(&colorIterator, runs, brightness, ms);
     shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, brightness, ms);
   }
 }
