@@ -3,9 +3,9 @@
 * displays times, date, humidity and temperatures on a Matrix
 *
 * @author  Lukas Christian
-* @version V7.1 2020/04/14
+* @version V8.0 2020/04/14
 * @since   2019-09
-* @date 2019/Sep/09 - 2022/Dez/08
+* @date 2019/Sep/09 - 2022/Dez/10
 */
 
 
@@ -37,7 +37,9 @@ const char *password = "08728425";
 
 const long utcOffsetInSeconds = 3600;
 
-char wday[7][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+//char wday[7][4] = { "SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT" };
+char wday[7][12] = { "Sonntag\0", "Montag\0", "Dienstag\0", "Mittwoch\0", "Donnerstag\0", "Freitag\0", "Samstag\0" };
+
 
 // Define NTP Client to get time
 WiFiUDP ntpUDP;
@@ -453,6 +455,7 @@ void RTCToMatrix(int *colorIterator, unsigned char runs, char brightness, int ti
       writeCharToMatrix(min_ones + _atoz, 16, 1, CR, CG, CB);
     }
     displ(true);
+    pixels.setBrightness(brightness);
     pixels.show();
     delay(time_ms);
   }
@@ -512,6 +515,7 @@ void datetime(int *colorIterator, unsigned char runs, unsigned char brightness, 
     }
 
     displ(true);
+    pixels.setBrightness(brightness);
     pixels.show();
     delay(time_ms);
   }
@@ -546,7 +550,8 @@ void showYear(int *colorIterator, unsigned char runs, unsigned char brightness, 
     writeCharToMatrix(year_tenth + _atoz, 11, 1, CR, CG, CB);
     writeCharToMatrix(year_ones + _atoz, 15, 1, CR, CG, CB);
 
-    displ(true);
+    displ(true);    
+    pixels.setBrightness(brightness);
     pixels.show();
     delay(time_ms);
   }
@@ -735,6 +740,7 @@ void humidity(int *colorIterator, unsigned char runs, unsigned char brightness, 
     }
     displ(true);
     pixels.show();
+    pixels.setBrightness(brightness);
     delay(time_ms);
   }
   *colorIterator -= (256 * runs);
@@ -772,6 +778,7 @@ void printTemperature(int *colorIterator, unsigned char runs, unsigned char brig
       writeCharToMatrix('C', 13, 1, CR, CG, CB);
     }
     displ(true);
+    pixels.setBrightness(brightness);
     pixels.show();
     delay(time_ms);
   }
@@ -909,11 +916,12 @@ void shiftTextV3(char CAPSLK_text[], int *colorIterator, unsigned char brightnes
   for (*colorIterator = 0; x > (txtRowLen); (*colorIterator)++) {
 
     writeRainbowToMatrix(*colorIterator);
-    if (*colorIterator % 1 == 0) {
+    if (*colorIterator % 3 == 0) {
       x--;
     }
     writeStringToMatrix(CAPSLK_text, x, brightness);
     displ(true);
+    pixels.setBrightness(brightness);
     pixels.show();
     delay(time_ms);
   }
@@ -990,13 +998,22 @@ void loop() {
 
   while (1) {
 
-    weekDays(&colorIterator, runs, brightness, ms);
+    //weekDays(&colorIterator, runs, brightness, ms);
+      
+    if(t.hour >= 19 || t.hour < 7)
+    {
+      brightness = 125;
+    }
+    else {
+    brightness = 250;
+    }
+    shiftTextV3(wday[t.wday], &colorIterator, brightness, ms);
     datetime(&colorIterator, runs, brightness, ms);
 
     RTCToMatrix(&colorIterator, runs, brightness, ms);
     showYear(&colorIterator, runs, brightness, ms);
     printTemperature(&colorIterator, runs, brightness, ms);
     humidity(&colorIterator, runs, brightness, ms);
-    shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, brightness, ms);
+    //shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, brightness, ms);
   }
 }
