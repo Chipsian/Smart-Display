@@ -47,7 +47,6 @@ NTPClient timeClient(ntpUDP, "0.at.pool.ntp.org", utcOffsetInSeconds);
 
 
 
-
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN D6  ///< On Trinket or Gemma, suggest changing this to 1
 
@@ -933,8 +932,8 @@ void shiftTextV3(char CAPSLK_text[], int *colorIterator, unsigned char brightnes
 * @addtogroup mainFunction 
 * 
 */
-void setup() {
-
+void setup() {  
+  
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
   dht.humidity().getSensor(&sensor);
@@ -997,7 +996,15 @@ void loop() {
   
 
   while (1) {
-
+    if(t.mon == 3 && t.wday == 0 && t.mday >=25 && t.hour == 2 )
+    {
+      NTPClient timeClient(ntpUDP, "0.at.pool.ntp.org", utcOffsetInSeconds+utcOffsetInSeconds);
+      t.hour = (uint8_t)timeClient.getHours();
+    }
+    else if (t.mon == 10 && t.wday == 0 && t.mday >=25 && t.hour == 3 ) {
+      NTPClient timeClient(ntpUDP, "0.at.pool.ntp.org", utcOffsetInSeconds);
+      t.hour = (uint8_t)timeClient.getHours();
+    }
     //weekDays(&colorIterator, runs, brightness, ms);
       
     if(t.hour >= 19 || t.hour < 7)
