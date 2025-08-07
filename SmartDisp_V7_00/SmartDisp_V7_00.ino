@@ -115,6 +115,7 @@ struct DisplaySettings {
   unsigned char brightness;      // *** NEU: Helligkeit 0-255 ***
   bool autoBrightness;          // *** NEU: Automatische Helligkeit ein/aus ***
   unsigned long lastNtpUpdate = 0;
+  unsigned short speed = 30;
 };
 
 DisplaySettings displaySettings;
@@ -1207,6 +1208,10 @@ void handleRoot() {
   html += "  slider.disabled = auto;";
   html += "  slider.style.opacity = auto ? '0.5' : '1';";
   html += "}";
+  html += "function updateSpeed(val) {";
+  html += "  document.getElementById('speedValue').innerHTML = val + ' ms';";
+  html += "  document.getElementById('speedHidden').value = val;";
+  html += "}";
   html += "</script>";
   
   html += "</head><body>";
@@ -1230,11 +1235,20 @@ void handleRoot() {
   
   html += "<div class='slider-container'>";
   html += "<label>Manuelle Helligkeit: <span id='brightnessValue' class='brightness-value'>" + String(displaySettings.brightness) + "</span></label><br>";
-  html += "<input type='range' id='brightnessSlider' class='slider' min='10' max='255' value='" + String(displaySettings.brightness) + "'";
+  html += "<input type='range' id='brightnessSlider' class='slider' min='0' max='255' value='" + String(displaySettings.brightness) + "'";
   html += " oninput='updateBrightness(this.value)'";
   html += String(displaySettings.autoBrightness ? " disabled style='opacity:0.5'" : "") + ">";
   html += "<input type='hidden' id='brightnessHidden' name='brightness' value='" + String(displaySettings.brightness) + "'>";
-  html += "<small>Minimum: 10, Maximum: 255</small>";
+  html += "<small>Minimum: 0, Maximum: 255</small>";
+  html += "</div><br>";
+
+  html += "<h3>⏱️ Geschwindigkeit</h3>";
+  html += "<div class='slider-container'>";
+  html += "<label>Anzeigegeschwindigkeit: <span id='speedValue' class='brightness-value'>" + String(displaySettings.speed) + " ms</span></label><br>";
+  html += "<input type='range' id='speedSlider' class='slider' min='1' max='255' value='" + String(displaySettings.speed) + "'";
+  html += " oninput='updateSpeed(this.value)'>";
+  html += "<input type='hidden' id='speedHidden' name='speed' value='" + String(displaySettings.speed) + "'>";
+  html += "<small>Minimum: 1 ms, Maximum: 255 ms</small>";
   html += "</div><br>";
   
   // Bestehende Display Settings...
@@ -1260,6 +1274,7 @@ void handleRoot() {
   html += "<hr><h3>📊 Status</h3>";
   html += "<p>Aktuelle Helligkeit: <strong>" + String(getCurrentBrightness()) + "</strong></p>";
   html += "<p>Modus: <strong>" + String(displaySettings.autoBrightness ? "Automatisch" : "Manuell") + "</strong></p>";
+  html += "<p>Geschwindigkeit: <strong>" + String(displaySettings.speed) + " ms</strong></p>";
   
   html += "</body></html>";
   
@@ -1350,7 +1365,7 @@ void handleSettings() {
   
   if(server.hasArg("brightness")) {
     int newBrightness = server.arg("brightness").toInt();
-    if(newBrightness >= 10 && newBrightness <= 255) {
+    if(newBrightness >= 0 && newBrightness <= 255) {
       displaySettings.brightness = (unsigned char)newBrightness;
       Serial.printf("Helligkeit gesetzt auf: %d\n", displaySettings.brightness);
     } else {
@@ -1358,6 +1373,16 @@ void handleSettings() {
       displaySettings.brightness = 200;
     }
   }
+  if(server.hasArg("speed")) {
+  int newSpeed = server.arg("speed").toInt();
+  if(newSpeed >= 1 && newSpeed <= 255) {
+    displaySettings.speed = (unsigned char)newSpeed;
+    Serial.printf("Geschwindigkeit gesetzt auf: %d ms\n", displaySettings.speed);
+  } else {
+    Serial.println("Ungültige Geschwindigkeit - verwende Standardwert");
+    displaySettings.speed = 30; // oder dein gewünschter Standardwert
+  }
+}
   
   Serial.printf("Auto-Helligkeit: %s, Manuelle Helligkeit: %d\n", 
                 displaySettings.autoBrightness ? "AN" : "AUS", 
@@ -1379,6 +1404,7 @@ void handleSettings() {
   html += "<body style='font-family:Arial;text-align:center;margin-top:50px;'>";
   html += "<h1>✅ Einstellungen gespeichert!</h1>";
   html += "<p>Helligkeit: <strong>" + String(getCurrentBrightness()) + "</strong></p>";
+  html += "<p>Geschwindigkeit: <strong>" + String(displaySettings.speed) + " ms</strong></p>";
   html += "<p>Die Seite lädt automatisch neu...</p>";
   html += "</body></html>";
   
@@ -1599,7 +1625,7 @@ void loop() {
   unsigned char brightness = 250;
   int runs = 1;
   int colorIterator = 0;
-  int ms = 30;
+  //int ms = displaySettings.speed;
 
   static unsigned long lastWebServerCheck = 0;
   static unsigned long lastStatusPrint = 0;
@@ -1633,53 +1659,68 @@ void loop() {
   DS3231_get(&t);
   
   // Brightness adjustment
-  brightness = getCurrentBrightness();
-  
+  //brightness = getCurrentBrightness();
+  bool allOFF = false; 
   // Special occasions
   if(t.mon == 12 && (t.mday == 24 || t.mday == 25)) {
-    shiftTextV3("FROHE WEIHNACHTEN\0", &colorIterator, brightness, ms);
+    shiftTextV3("FROHE WEIHNACHTEN\0", &colorIterator, displaySettings.brightness, displaySettings.speed);
   }
   else if(t.mon == 1 && t.mday == 1) {
-    shiftTextV3("NEUJAHR\0", &colorIterator, brightness, ms);
+    shiftTextV3("NEUJAHR\0", &colorIterator, displaySettings.brightness, displaySettings.speed);
   }
   else if (t.mon == 12 && t.mday == 31) {
-    shiftTextV3("SILVESTER\0", &colorIterator, brightness, ms);
+    shiftTextV3("SILVESTER\0", &colorIterator, displaySettings.brightness, displaySettings.speed);
   }
   else if(t.mon == 1 && t.mday >= 20 && (t.wday == 5 || t.wday == 6)) {
-    shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, brightness, ms);
+    shiftTextV3("WILLKOMMEN AN DER HTL BULME\0", &colorIterator, displaySettings.brightness, displaySettings.speed);
   }
   
   // Regular display sequence based on settings
   if(displaySettings.showWeekday) {
-    shiftTextV3(wday[t.wday], &colorIterator, brightness, ms);
+    shiftTextV3(wday[t.wday], &colorIterator, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showDate) {
-    datetime(&colorIterator, runs, brightness, ms);
+    datetime(&colorIterator, runs, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showTime) {
-    RTCToMatrix(&colorIterator, runs, brightness, ms);
+    RTCToMatrix(&colorIterator, runs, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showYear) {
-    showYear(&colorIterator, runs, brightness, ms);
+    showYear(&colorIterator, runs, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showTemp) {
-    printTemperature(&colorIterator, runs, brightness, ms);
+    printTemperature(&colorIterator, runs, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showHumidity) {
-    humidity(&colorIterator, runs, brightness, ms);
+    humidity(&colorIterator, runs, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   
   if(displaySettings.showCustomText && strlen(customText) > 0) {
-    shiftTextV3(customText, &colorIterator, brightness, ms);
+    shiftTextV3(customText, &colorIterator, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
   if(displaySettings.showName)
   { 
-    shiftTextV3("SMART DISPLAY\0", &colorIterator, brightness, ms);
+    shiftTextV3("SMART DISPLAY\0", &colorIterator, displaySettings.brightness, displaySettings.speed);
+    allOFF = true;
   }
-
+  //displ(true);
+  if(allOFF == false)
+  {
+    handleWebServerDuringAnimation();
+    pixels.clear();
+    pixels.show();
+    delay(30);
+  }
 }
