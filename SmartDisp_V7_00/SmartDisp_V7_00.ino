@@ -5,7 +5,7 @@
 * @author  Lukas Christian
 * @version V8.0 2020/04/14
 * @since   2019-09
-* @date 2019/Sep/09 - 2022/Dez/10
+* @date 2019/Sep/09 - 2025/aug/4
 */
 
 
@@ -1175,6 +1175,7 @@ void startAccessPoint() {
 // GEÄNDERT: Entfernt WiFi Status Check, da immer im AP-Modus
 // 3. ERWEITERE handleRoot() für den Helligkeits-Slider:
 void handleRoot() {
+  displaySettings.enableWebInterface = true;
   if(!displaySettings.enableWebInterface) {
     server.send(403, "text/html", 
       "<!DOCTYPE html><html><head><title>Deaktiviert</title></head>"
